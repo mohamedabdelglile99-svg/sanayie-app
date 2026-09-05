@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>فنيين - صنايعي</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div class="screen">
+  <div class="band" style="padding-bottom:30px;">
+    <a href="home-customer.html" class="back-link">‹ رجوع</a>
+    <div class="logo-mark"><span class="dot"></span> صنايعي</div>
+    <h1 style="font-size:22px;margin-top:10px;" id="pageTitle">الفنيين المتاحين</h1>
+    <p>اختار فني واتصل بيه على طول</p>
+  </div>
+
+  <div class="wrap">
+    <div id="techList">
+      <p class="hint">جاري تحميل الفنيين...</p>
+    </div>
+    <div class="bottom-space"></div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="assets/firebase-config.js"></script>
+<script>
+const params = new URLSearchParams(window.location.search);
+const spec = params.get('spec') || '';
+document.getElementById('pageTitle').textContent = spec ? ('فنيين ' + spec) : 'الفنيين المتاحين';
+
+const listEl = document.getElementById('techList');
+
+db.collection('technicians')
+  .where('specialty', '==', spec)
+  .where('status', '==', 'approved')
+  .get()
+  .then(function(snapshot){
+    if(snapshot.empty){
+      listEl.innerHTML = '<div class="list-row"><div class="ico">😕</div><div class="grow"><strong>مفيش فنيين متاحين دلوقتي</strong><div class="sub">جرب تاني بعد شوية</div></div></div>';
+      return;
+    }
+    listEl.innerHTML = '';
+    snapshot.forEach(function(doc){
+      const t = doc.data();
+      const row = document.createElement('a');
+      row.className = 'list-row';
+      row.href = 'tel:' + t.phone;
+      row.innerHTML =
+        '<div class="ico">🛠️</div>' +
+        '<div class="grow"><strong>'+ t.name +'</strong><div class="sub">'+ (t.address || '') +'</div></div>' +
+        '<span class="badge">اتصال</span>';
+      listEl.appendChild(row);
+    });
+  })
+  .catch(function(err){
+    console.error(err);
+    listEl.innerHTML = '<p class="hint">حصل خطأ في تحميل البيانات، تأكد من الاتصال بالإنترنت.</p>';
+  });
+</script>
+</body>
+</html>
