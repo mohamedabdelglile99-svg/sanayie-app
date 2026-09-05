@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>تسجيل فني - صنايعي</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div class="screen">
+  <div class="band" style="padding-bottom:30px;">
+    <a href="index.html" class="back-link">‹ رجوع</a>
+    <div class="logo-mark"><span class="dot"></span> صنايعي</div>
+    <h1 style="font-size:22px;margin-top:10px;">تسجيل حساب فني</h1>
+    <p>هنراجع بياناتك بسرعة قبل ما تبدأ تستقبل طلبات</p>
+  </div>
+
+  <div class="wrap">
+    <div class="error-msg" id="errBox"></div>
+
+    <form id="techForm">
+      <div class="field">
+        <label>الاسم بالكامل</label>
+        <input type="text" id="t_name" placeholder="مثال: محمد علي" required>
+      </div>
+
+      <div class="field">
+        <label>رقم الهاتف</label>
+        <input type="tel" id="t_phone" placeholder="01xxxxxxxxx" required maxlength="11">
+      </div>
+
+      <div class="field">
+        <label>العنوان</label>
+        <input type="text" id="t_address" placeholder="الحي، الشارع" required>
+      </div>
+
+      <div class="field">
+        <label>التخصص</label>
+        <div class="spec-grid" id="specGrid">
+          <div class="spec-chip" data-val="سباكة"><span class="ico">🔧</span>سباكة</div>
+          <div class="spec-chip" data-val="كهرباء"><span class="ico">💡</span>كهرباء</div>
+          <div class="spec-chip" data-val="نقاشة"><span class="ico">🎨</span>نقاشة</div>
+          <div class="spec-chip" data-val="تكييف وتبريد"><span class="ico">❄️</span>تكييف وتبريد</div>
+          <div class="spec-chip" data-val="نظافة"><span class="ico">🧹</span>نظافة</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>صورة البطاقة (وش وظهر)</label>
+        <div class="upload-grid">
+          <div class="upload-box" id="frontBox">
+            <input type="file" accept="image/*" id="idFront">
+            <div class="up-icon">🪪</div>
+            <div class="up-text">وش البطاقة</div>
+          </div>
+          <div class="upload-box" id="backBox">
+            <input type="file" accept="image/*" id="idBack">
+            <div class="up-icon">🪪</div>
+            <div class="up-text">ظهر البطاقة</div>
+          </div>
+        </div>
+        <p class="hint">لازم الصورتين تكونوا واضحين، هيتم مراجعتهم قبل تفعيل حسابك.</p>
+      </div>
+
+      <button type="submit" class="btn-primary" id="submitBtn">تسجيل وإرسال للمراجعة</button>
+    </form>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-storage-compat.js"></script>
+<script src="assets/firebase-config.js"></script>
+<script>
+let selectedSpec = null;
+document.querySelectorAll('.spec-chip').forEach(function(chip){
+  chip.addEventListener('click', function(){
+    document.querySelectorAll('.spec-chip').forEach(c => c.classList.remove('selected'));
+    chip.classList.add('selected');
+    selectedSpec = chip.dataset.val;
+  });
+});
+
+function wireUpload(inputId, boxId){
+  const input = document.getElementById(inputId);
+  const box = document.getElementById(boxId);
+  input.addEventListener('change', function(){
+    if(input.files && input.files[0]){
+      box.classList.add('filled');
+      const reader = new FileReader();
+      reader.onload = function(e){
+        box.querySelector('.up-icon').outerHTML = '<img class="upload-preview" src="'+e.target.result+'">';
+      };
+      reader.readAsDataURL(input.files[0]);
+      box.querySelector('.up-text').textContent = 'تم اختيار الصورة ✓';
+    }
+  });
+}
+wireUpload('idFront','frontBox');
+wireUpload('idBack','backBox');
+
+const form = document.getElementById('techForm');
+const errBox = document.getElementById('errBox');
+const submitBtn = document.getElementById('submitBtn');
+
+function showError(msg){
+  errBox.textContent = msg;
+  errBox.classList.add('show');
+}
+
+form.addEventListener('submit', async function(e){
+  e.preventDefault();
+  errBox.classList.remove('show');
+
+  const name = document.getElementById('t_name').value.trim();
+  const phone = document.getElementById('t_phone').value.trim();
+  const address = document.getElementById('t_address').value.trim();
+  const frontFile = document.getElementById('idFront').files[0];
+  const backFile = document.getElementById('idBack').files[0];
+
+  const phoneOk = /^01[0-2,5]{1}[0-9]{8}$/.test(phone);
+  if(name.length < 3){ showError('اكتب اسمك بالكامل من فضلك'); return; }
+  if(!phoneOk){ showError('رقم الهاتف غير صحيح، لازم يبدأ بـ 01 ويكون 11 رقم'); return; }
+  if(address.length < 5){ showError('اكتب العنوان من فضلك'); return; }
+  if(!selectedSpec){ showError('اختار تخصصك من فضلك'); return; }
+  if(!frontFile || !backFile){ showError('لازم ترفع صورة وش وظهر البطاقة'); return; }
+
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = 'جاري الرفع <span class="spinner"></span>';
+
+  try{
+    const docRef = await db.collection('technicians').add({
+      name: name,
+      phone: phone,
+      address: address,
+      specialty: selectedSpec,
+      status: 'pending_review',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    const techId = docRef.id;
+
+    const frontRef = storage.ref('technician_ids/' + techId + '/front_' + frontFile.name);
+    const backRef = storage.ref('technician_ids/' + techId + '/back_' + backFile.name);
+
+    await frontRef.put(frontFile);
+    await backRef.put(backFile);
+
+    const frontUrl = await frontRef.getDownloadURL();
+    const backUrl = await backRef.getDownloadURL();
+
+    await db.collection('technicians').doc(techId).update({
+      idFrontUrl: frontUrl,
+      idBackUrl: backUrl
+    });
+
+    localStorage.setItem('sanayie_tech_id', techId);
+    localStorage.setItem('sanayie_tech_name', name);
+    localStorage.setItem('sanayie_tech_specialty', selectedSpec);
+
+    window.location.href = 'home-technician.html';
+
+  }catch(err){
+    console.error(err);
+    showError('حصل خطأ أثناء التسجيل، تأكد من الاتصال بالإنترنت وحاول تاني');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'تسجيل وإرسال للمراجعة';
+  }
+});
+</script>
+</body>
+</html>
