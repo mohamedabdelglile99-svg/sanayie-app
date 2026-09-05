@@ -70,9 +70,26 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-storage-compat.js"></script>
 <script src="assets/firebase-config.js"></script>
 <script>
+// ===== بيانات Cloudinary =====
+const CLOUD_NAME = "yestdea0";
+const UPLOAD_PRESET = "sanayie_unsigned";
+
+async function uploadToCloudinary(file){
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', UPLOAD_PRESET);
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+    method: 'POST',
+    body: formData
+  });
+  if(!res.ok) throw new Error('فشل رفع الصورة');
+  const data = await res.json();
+  return data.secure_url;
+}
+
 let selectedSpec = null;
 document.querySelectorAll('.spec-chip').forEach(function(chip){
   chip.addEventListener('click', function(){
@@ -130,30 +147,21 @@ form.addEventListener('submit', async function(e){
   submitBtn.innerHTML = 'جاري الرفع <span class="spinner"></span>';
 
   try{
+    const frontUrl = await uploadToCloudinary(frontFile);
+    const backUrl = await uploadToCloudinary(backFile);
+
     const docRef = await db.collection('technicians').add({
       name: name,
       phone: phone,
       address: address,
       specialty: selectedSpec,
       status: 'pending_review',
+      idFrontUrl: frontUrl,
+      idBackUrl: backUrl,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
     const techId = docRef.id;
-
-    const frontRef = storage.ref('technician_ids/' + techId + '/front_' + frontFile.name);
-    const backRef = storage.ref('technician_ids/' + techId + '/back_' + backFile.name);
-
-    await frontRef.put(frontFile);
-    await backRef.put(backFile);
-
-    const frontUrl = await frontRef.getDownloadURL();
-    const backUrl = await backRef.getDownloadURL();
-
-    await db.collection('technicians').doc(techId).update({
-      idFrontUrl: frontUrl,
-      idBackUrl: backUrl
-    });
 
     localStorage.setItem('sanayie_tech_id', techId);
     localStorage.setItem('sanayie_tech_name', name);
