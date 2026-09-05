@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>تسجيل عميل - صنايعي</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div class="screen">
+  <div class="band" style="padding-bottom:30px;">
+    <a href="index.html" class="back-link">‹ رجوع</a>
+    <div class="logo-mark"><span class="dot"></span> صنايعي</div>
+    <h1 style="font-size:22px;margin-top:10px;">تسجيل حساب عميل</h1>
+    <p>بياناتك بسيطة وهتستخدمها بس عشان الفني يوصلك</p>
+  </div>
+
+  <div class="wrap">
+    <div class="error-msg" id="errBox"></div>
+    <div class="success-msg" id="okBox">تم التسجيل بنجاح، جاري تحويلك...</div>
+
+    <form id="custForm">
+      <div class="field">
+        <label>الاسم بالكامل</label>
+        <input type="text" id="c_name" placeholder="مثال: أحمد محمود" required>
+      </div>
+
+      <div class="field">
+        <label>رقم الهاتف</label>
+        <input type="tel" id="c_phone" placeholder="01xxxxxxxxx" required maxlength="11">
+      </div>
+
+      <div class="field">
+        <label>العنوان بالتفصيل</label>
+        <input type="text" id="c_address" placeholder="الحي، الشارع، رقم العقار" required>
+      </div>
+
+      <button type="submit" class="btn-primary" id="submitBtn">تسجيل والدخول</button>
+    </form>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="assets/firebase-config.js"></script>
+<script>
+const form = document.getElementById('custForm');
+const errBox = document.getElementById('errBox');
+const okBox = document.getElementById('okBox');
+const submitBtn = document.getElementById('submitBtn');
+
+function showError(msg){
+  errBox.textContent = msg;
+  errBox.classList.add('show');
+  okBox.classList.remove('show');
+}
+
+form.addEventListener('submit', async function(e){
+  e.preventDefault();
+  errBox.classList.remove('show');
+
+  const name = document.getElementById('c_name').value.trim();
+  const phone = document.getElementById('c_phone').value.trim();
+  const address = document.getElementById('c_address').value.trim();
+
+  const phoneOk = /^01[0-2,5]{1}[0-9]{8}$/.test(phone);
+  if(name.length < 3){ showError('اكتب اسمك بالكامل من فضلك'); return; }
+  if(!phoneOk){ showError('رقم الهاتف غير صحيح، لازم يبدأ بـ 01 ويكون 11 رقم'); return; }
+  if(address.length < 5){ showError('اكتب العنوان بالتفصيل من فضلك'); return; }
+
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = 'جاري التسجيل <span class="spinner"></span>';
+
+  try{
+    const docRef = await db.collection('customers').add({
+      name: name,
+      phone: phone,
+      address: address,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    localStorage.setItem('sanayie_customer_id', docRef.id);
+    localStorage.setItem('sanayie_customer_name', name);
+
+    okBox.classList.add('show');
+    setTimeout(function(){
+      window.location.href = 'home-customer.html';
+    }, 900);
+
+  }catch(err){
+    showError('حصل خطأ أثناء التسجيل، تأكد من الاتصال بالإنترنت وحاول تاني');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'تسجيل والدخول';
+  }
+});
+</script>
+</body>
+</html>
