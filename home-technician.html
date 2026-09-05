@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>الرئيسية - فني</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div class="screen">
+  <div class="topbar">
+    <div class="greet">
+      <strong id="techGreet">أهلاً بيك 👋</strong>
+      <span id="techSpec">تخصصك</span>
+    </div>
+    <div class="bell">🔔</div>
+  </div>
+
+  <div class="wrap">
+
+    <div class="card" id="statusCard" style="margin-bottom:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <strong style="font-family:'Cairo',sans-serif;font-size:15px;">حالة حسابك</strong>
+          <p class="hint" style="margin-top:4px;">بياناتك تحت المراجعة، هتقدر تستقبل طلبات بعد التفعيل.</p>
+        </div>
+        <span class="badge pending" id="statusBadge">قيد المراجعة</span>
+      </div>
+    </div>
+
+    <div class="section-title">طلبات جديدة قريبة منك</div>
+    <div class="list-row">
+      <div class="ico">📋</div>
+      <div class="grow">
+        <strong>مفيش طلبات لسه</strong>
+        <div class="sub">هتظهر هنا أول ما عميل يطلب في تخصصك</div>
+      </div>
+    </div>
+
+    <a href="emergency.html" class="emg-btn">
+      <span class="ico">🚨</span>
+      <span>
+        <strong>طوارئ الخدمات المجتمعية</strong>
+        <span>أرقام كهرباء، مياه وغاز في حالة الطوارئ</span>
+      </span>
+    </a>
+
+    <div class="bottom-space"></div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="assets/firebase-config.js"></script>
+<script>
+  const name = localStorage.getItem('sanayie_tech_name');
+  const spec = localStorage.getItem('sanayie_tech_specialty');
+  const techId = localStorage.getItem('sanayie_tech_id');
+
+  if(name) document.getElementById('techGreet').textContent = 'أهلاً يا ' + name + ' 👋';
+  if(spec) document.getElementById('techSpec').textContent = 'تخصص: ' + spec;
+
+  if(techId){
+    db.collection('technicians').doc(techId).get().then(function(doc){
+      if(doc.exists){
+        const status = doc.data().status;
+        const badge = document.getElementById('statusBadge');
+        const hint = document.querySelector('#statusCard .hint');
+        if(status === 'approved'){
+          badge.textContent = 'مُفعّل';
+          badge.classList.remove('pending');
+          hint.textContent = 'حسابك مفعّل، تقدر تستقبل طلبات دلوقتي.';
+        }else if(status === 'rejected'){
+          badge.textContent = 'مرفوض';
+          badge.style.background = '#FBEAE7';
+          badge.style.color = '#C24A3A';
+          hint.textContent = 'في مشكلة في بياناتك، تواصل مع الدعم من فضلك.';
+        }
+      }
+    }).catch(function(e){ console.error(e); });
+  }
+</script>
+</body>
+</html>
