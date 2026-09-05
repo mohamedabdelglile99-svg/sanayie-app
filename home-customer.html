@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>الرئيسية - صنايعي</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div class="screen">
+  <div class="topbar">
+    <div class="greet">
+      <strong id="custGreet">أهلاً بيك 👋</strong>
+      <span>محتاج مين النهاردة؟</span>
+    </div>
+    <div class="bell">🔔</div>
+  </div>
+
+  <div class="wrap">
+
+    <div class="section-title">التخصصات</div>
+    <div class="cat-strip">
+      <a class="cat-item" href="find-technician.html?spec=سباكة">
+        <div class="ico">🔧</div><span>سباكة</span>
+      </a>
+      <a class="cat-item" href="find-technician.html?spec=كهرباء">
+        <div class="ico">💡</div><span>كهرباء</span>
+      </a>
+      <a class="cat-item" href="find-technician.html?spec=نقاشة">
+        <div class="ico">🎨</div><span>نقاشة</span>
+      </a>
+      <a class="cat-item" href="find-technician.html?spec=تكييف%20وتبريد">
+        <div class="ico">❄️</div><span>تكييف وتبريد</span>
+      </a>
+      <a class="cat-item" href="find-technician.html?spec=نظافة">
+        <div class="ico">🧹</div><span>نظافة</span>
+      </a>
+      <a class="cat-item" href="register-technician.html">
+        <div class="ico">➕</div><span>انضم كفني</span>
+      </a>
+    </div>
+
+    <a href="emergency.html" class="emg-btn">
+      <span class="ico">🚨</span>
+      <span>
+        <strong>طوارئ الخدمات المجتمعية</strong>
+        <span>أرقام كهرباء، مياه وغاز في حالة الطوارئ</span>
+      </span>
+    </a>
+
+    <div class="section-title">آخر الطلبات</div>
+    <div id="ordersList">
+      <div class="list-row">
+        <div class="ico">📋</div>
+        <div class="grow">
+          <strong>مفيش طلبات لسه</strong>
+          <div class="sub">اختار تخصص من فوق وابدأ أول طلب</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-space"></div>
+  </div>
+</div>
+
+<script>
+  const name = localStorage.getItem('sanayie_customer_name');
+  if(name){
+    document.getElementById('custGreet').textContent = 'أهلاً يا ' + name + ' 👋';
+  }
+</script>
+</body>
+</html>
